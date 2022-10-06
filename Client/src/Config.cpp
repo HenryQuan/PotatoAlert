@@ -1,5 +1,6 @@
 // Copyright 2020 <github.com/razaqq>
 
+#include "Client/AppDirectories.hpp"
 #include "Client/Game.hpp"
 
 #include "Core/File.hpp"
@@ -15,6 +16,7 @@
 #include <QStandardPaths>
 
 #include <filesystem>
+#include <format>
 #include <iostream>
 #include <string>
 #include <utility>
@@ -22,6 +24,7 @@
 
 namespace fs = std::filesystem;
 
+using PotatoAlert::Client::AppDirectories;
 using PotatoAlert::Client::Config;
 using PotatoAlert::Client::ConfigKey;
 using PotatoAlert::Client::Game::GetGamePath;
@@ -35,6 +38,7 @@ static std::unordered_map<ConfigKey, std::string> g_keyNames =
 	{ ConfigKey::UpdateNotifications,      "update_notifications" },
 	{ ConfigKey::MinimizeTray,             "minimize_tray" },
 	{ ConfigKey::MatchHistory,             "match_history" },
+	{ ConfigKey::SaveMatchCsv,             "save_match_csv" },
 	{ ConfigKey::WindowHeight,             "window_height" },
 	{ ConfigKey::WindowWidth,              "window_width" },
 	{ ConfigKey::WindowX,                  "window_x" },
@@ -47,8 +51,7 @@ static std::unordered_map<ConfigKey, std::string> g_keyNames =
 	{ ConfigKey::MenuBarLeft,              "menubar_left" }
 };
 
-Config::Config(const fs::path& path, std::string_view fileName)
-	: m_filePath(path / fileName)
+Config::Config(const std::string& filePath) : m_filePath(filePath)
 {
 	g_defaultConfig = {
 		{ g_keyNames[ConfigKey::StatsMode],                StatsMode::Pvp },
@@ -57,6 +60,7 @@ Config::Config(const fs::path& path, std::string_view fileName)
 		{ g_keyNames[ConfigKey::UpdateNotifications],      true },
 		{ g_keyNames[ConfigKey::MinimizeTray],             false },
 		{ g_keyNames[ConfigKey::MatchHistory],             true },
+		{ g_keyNames[ConfigKey::SaveMatchCsv],             false },
 		{ g_keyNames[ConfigKey::WindowHeight],             450 },
 		{ g_keyNames[ConfigKey::WindowWidth],              1500 },
 		{ g_keyNames[ConfigKey::WindowX],                  0 },
@@ -97,7 +101,7 @@ void Config::Load()
 		m_file.Close();
 	}
 
-	m_file = File::Open(m_filePath.string(), File::Flags::Open | File::Flags::Read | File::Flags::Write);
+	m_file = File::Open(m_filePath, File::Flags::Open | File::Flags::Read | File::Flags::Write);
 	if (!m_file)
 	{
 		LOG_ERROR("Failed to open config file: {}", File::LastError());
@@ -178,7 +182,7 @@ bool Config::CreateDefault()
 		m_file.Close();
 	}
 
-	m_file = File::Open(m_filePath.string(), File::Flags::Create | File::Flags::Read | File::Flags::Write);
+	m_file = File::Open(m_filePath, File::Flags::Create | File::Flags::Read | File::Flags::Write);
 	if (!m_file)
 	{
 		LOG_ERROR("Failed to open config file: {}", File::LastError());

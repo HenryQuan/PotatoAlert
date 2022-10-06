@@ -1,6 +1,8 @@
 // Copyright 2020 <github.com/razaqq>
 #pragma once
 
+#include "Client/ServiceProvider.hpp"
+
 #include "Core/File.hpp"
 #include "Core/Json.hpp"
 
@@ -38,6 +40,7 @@ enum class ConfigKey : uint64_t
 	DECL_TYPE(MenuBarLeft,              ConfigType::Bool,          3),
 	DECL_TYPE(UpdateNotifications,      ConfigType::Bool,          4),
 	DECL_TYPE(OverrideReplaysDirectory, ConfigType::Bool,          5),
+	DECL_TYPE(SaveMatchCsv,             ConfigType::Bool,          6),
 	DECL_TYPE(WindowHeight,             ConfigType::Int,           1),
 	DECL_TYPE(WindowWidth,              ConfigType::Int,           2),
 	DECL_TYPE(WindowX,                  ConfigType::Int,           3),
@@ -86,7 +89,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(TeamStatsMode,
 class Config
 {
 public:
-	explicit Config(const fs::path& path, std::string_view fileName);
+	explicit Config(const std::string& filePath);
 	Config(const Config& config) = delete;
 	Config(Config&& config) noexcept = delete;
 	Config& operator=(const Config& config) = delete;
@@ -149,7 +152,7 @@ public:
 private:
 	json m_json;
 	File m_file;
-	fs::path m_filePath;
+	std::string m_filePath;
 	void AddMissingKeys();
 	void ApplyUpdates();
 	bool CreateDefault();

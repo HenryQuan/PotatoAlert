@@ -1,8 +1,10 @@
 // Copyright 2021 <github.com/razaqq>
 
 #include "Core/ApplicationGuard.hpp"
+#include "Core/Directory.hpp"
 #include "Core/StandardPaths.hpp"
 
+#include "Client/AppDirectories.hpp"
 #include "Client/Config.hpp"
 #include "Client/MatchHistory.hpp"
 #include "Client/ServiceProvider.hpp"
@@ -26,6 +28,7 @@
 #include <QFile>
 #include <QEvent>
 
+using PotatoAlert::Client::AppDirectories;
 using PotatoAlert::Client::Config;
 using PotatoAlert::Client::ConfigKey;
 using PotatoAlert::Client::MatchHistory;
@@ -51,27 +54,28 @@ static int RunMain(int argc, char* argv[])
 
 	Q_INIT_RESOURCE(PotatoAlert);
 
-	PotatoAlert::Core::Log::Init();
-
 	QApplication app(argc, argv);
 
 	ServiceProvider serviceProvider;
 
-	fs::path appDataPath = AppDataPath("PotatoAlert");
+	AppDirectories appDirs("PotatoAlert");
+	serviceProvider.Add(appDirs);
 
-	Config config(appDataPath, "config.json");
+	PotatoAlert::Core::Log::Init(appDirs.LogFile);
+
+	Config config(appDirs.ConfigFile);
 	serviceProvider.Add(config);
 
 	ReplayAnalyzer replayAnalyzer(serviceProvider, {
 		PotatoAlert::Core::GetModuleRootPath().value() / "ReplayVersions",
-		AppDataPath("PotatoAlert") / "ReplayVersions"
+		appDirs.ReplayVersionsDir
 	});
 	serviceProvider.Add(replayAnalyzer);
 
 	PotatoClient client(serviceProvider);
 	serviceProvider.Add(client);
 
-	MatchHistory matchHistory;
+	MatchHistory matchHistory(serviceProvider);
 	serviceProvider.Add(matchHistory);
 
 	QApplication::setQuitOnLastWindowClosed(false);
